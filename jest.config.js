@@ -7,12 +7,10 @@ module.exports = {
     '^.+\\.ts$': 'ts-jest',
   },
   globals: {
-    'ts-jest': {
-      tsconfig: {
-        types: ['jest', 'node'],
-      },
-    },
+  'ts-jest': {
+    tsconfig: 'tsconfig.test.json',
   },
+},
   collectCoverageFrom: [
     'src/**/*.ts',
     '!src/**/*.d.ts',

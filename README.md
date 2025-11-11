@@ -279,6 +279,8 @@ docker-compose up -d
 - Rate limiting (100 requests per 15 minutes)
 - Helmet.js security headers
 - Input validation on all endpoints
+- Audit Logs of activities on the server.
+- ACID Compliance for writing to the on wallet transcations
 - CORS configuration
 
 ## License

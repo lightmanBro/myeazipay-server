@@ -12,7 +12,7 @@ export interface TransactionReceipt {
   blockNumber?: number;
   gasUsed?: string;
   gasPrice?: string;
-  timestamp?: number;
+  timestamp?: bigint;
 }
 
 /**
@@ -237,7 +237,7 @@ export class BlockchainService {
           }));
         }
       } catch (alchemyError) {
-        console.warn('Alchemy getAssetTransfers failed:', alchemyError instanceof Error ? alchemyError?.message : 'Unknown error');
+        console.log('Alchemy getAssetTransfers failed:', alchemyError instanceof Error ? alchemyError?.message : 'Unknown error');
       }
 
       // If no transactions found or Alchemy method failed, return empty array
