@@ -5,7 +5,7 @@ import { Response, NextFunction } from 'express';
 jest.mock('../../src/utils/jwt', () => ({
   verifyToken: jest.fn(),
 }));
-
+// Testing the auth middleware.
 describe('authMiddleware', () => {
   let mockReq: Partial<AuthRequest>;
   let mockRes: Partial<Response>;
