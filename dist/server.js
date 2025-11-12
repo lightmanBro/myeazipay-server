@@ -92,6 +92,9 @@ async function startServer() {
     app.get('/health', (_req, res) => {
         res.json({ status: 'ok', timestamp: new Date().toISOString() });
     });
+    app.get('/', (_req, res) => {
+        res.send('🚀 Wallet Service is running. Visit /graphql for API access.');
+    });
     // Error handling middleware (must be last)
     app.use(errorHandler_1.errorHandler);
     // Start server

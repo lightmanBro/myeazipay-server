@@ -16,14 +16,14 @@ export const AppDataSource = new DataSource({
   password: process.env.DB_PASSWORD || 'postgres',
   database: process.env.DB_NAME || 'wallet_db',
   entities: [User, Wallet, Transaction, AuditLog],
-  synchronize: process.env.NODE_ENV === 'development',
-  logging: process.env.NODE_ENV === 'development',
-  // migrations: [
-  //   process.env.NODE_ENV === 'production' 
-  //     ? 'dist/migrations/**/*.js'  // Production: use compiled JS
-  //     : 'src/migrations/**/*.ts'   // Development: use TS files
-  // ],
-  // migrationsTableName: 'migrations',
+  synchronize: true,
+  logging: true,
+  migrations: [
+    process.env.NODE_ENV === 'production' 
+      ? 'dist/migrations/**/*.js'  // Production: use compiled JS
+      : 'src/migrations/**/*.ts'   // Development: use TS files
+  ],
+  migrationsTableName: 'migrations',
   ssl:
     process.env.NODE_ENV === 'production'
       ? { rejectUnauthorized: false }

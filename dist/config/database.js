@@ -21,13 +21,13 @@ exports.AppDataSource = new typeorm_1.DataSource({
     database: process.env.DB_NAME || 'wallet_db',
     entities: [User_1.User, Wallet_1.Wallet, Transaction_1.Transaction, AuditLog_1.AuditLog],
     synchronize: true,
-    logging: process.env.NODE_ENV === 'development',
-    // migrations: [
-    //   process.env.NODE_ENV === 'production' 
-    //     ? 'dist/migrations/**/*.js'  // Production: use compiled JS
-    //     : 'src/migrations/**/*.ts'   // Development: use TS files
-    // ],
-    // migrationsTableName: 'migrations',
+    logging: true,
+    migrations: [
+        process.env.NODE_ENV === 'production'
+            ? 'dist/migrations/**/*.js' // Production: use compiled JS
+            : 'src/migrations/**/*.ts' // Development: use TS files
+    ],
+    migrationsTableName: 'migrations',
     ssl: process.env.NODE_ENV === 'production'
         ? { rejectUnauthorized: false }
         : false,
