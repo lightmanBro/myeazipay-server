@@ -20,7 +20,7 @@ exports.AppDataSource = new typeorm_1.DataSource({
     password: process.env.DB_PASSWORD || 'postgres',
     database: process.env.DB_NAME || 'wallet_db',
     entities: [User_1.User, Wallet_1.Wallet, Transaction_1.Transaction, AuditLog_1.AuditLog],
-    synchronize: process.env.NODE_ENV === 'development',
+    synchronize: true,
     logging: process.env.NODE_ENV === 'development',
     // migrations: [
     //   process.env.NODE_ENV === 'production' 
