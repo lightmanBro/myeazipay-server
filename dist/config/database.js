@@ -13,7 +13,8 @@ const dotenv_1 = __importDefault(require("dotenv"));
 dotenv_1.default.config();
 exports.AppDataSource = new typeorm_1.DataSource({
     type: 'postgres',
-    host: process.env.DB_HOST || 'localhost',
+    url: process.env.DATABASE_URL, // ✅ For Render or any full connection URL
+    host: process.env.DB_HOST || 'localhost', // ✅ fallback for local
     port: parseInt(process.env.DB_PORT || '5432', 10),
     username: process.env.DB_USERNAME || 'postgres',
     password: process.env.DB_PASSWORD || 'postgres',
@@ -23,5 +24,8 @@ exports.AppDataSource = new typeorm_1.DataSource({
     logging: process.env.NODE_ENV === 'development',
     migrations: ['src/migrations/**/*.ts'],
     migrationsTableName: 'migrations',
+    ssl: process.env.NODE_ENV === 'production'
+        ? { rejectUnauthorized: false } // ✅ Needed for Render’s Postgres SSL
+        : false,
 });
 //# sourceMappingURL=database.js.map
