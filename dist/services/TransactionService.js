@@ -1,23 +1,20 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.TransactionService = void 0;
-const ethers_1 = require("ethers");
-const database_1 = require("../config/database");
-const Transaction_1 = require("../entities/Transaction");
-const Wallet_1 = require("../entities/Wallet");
-const BlockchainService_1 = require("./BlockchainService");
-const WalletService_1 = require("./WalletService");
-const AuditLogService_1 = require("./AuditLogService");
-const AuditLog_1 = require("../entities/AuditLog");
-const addressValidation_1 = require("../utils/addressValidation");
-const blockchain_1 = require("../config/blockchain");
+import { ethers } from 'ethers';
+import { AppDataSource } from '../config/database';
+import { Transaction, TransactionStatus } from '../entities/Transaction';
+import { Network } from '../entities/Wallet';
+import { BlockchainService } from './BlockchainService';
+import { WalletService } from './WalletService';
+import { AuditLogService } from './AuditLogService';
+import { AuditAction } from '../entities/AuditLog';
+import { validateAndNormalizeAddress } from '../utils/addressValidation';
+import { blockchainConfig } from '../config/blockchain';
 /**
  * Service for transaction operations
  */
-class TransactionService {
-    constructor(network = Wallet_1.Network.TESTNET) {
-        this.walletService = new WalletService_1.WalletService(network);
-        this.blockchainService = new BlockchainService_1.BlockchainService(network);
+export class TransactionService {
+    constructor(network = Network.TESTNET) {
+        this.walletService = new WalletService(network);
+        this.blockchainService = new BlockchainService(network);
     }
     /**
      * Sends funds from a wallet to another address
@@ -28,7 +25,7 @@ class TransactionService {
      * @returns The transaction hash
      */
     async sendFunds(fromAddress, toAddress, amount, network) {
-        const queryRunner = database_1.AppDataSource.createQueryRunner();
+        const queryRunner = AppDataSource.createQueryRunner();
         await queryRunner.connect();
         await queryRunner.startTransaction();
         let normalizedFromAddress = '';
@@ -37,15 +34,15 @@ class TransactionService {
         let wallet;
         try {
             // Enforce testnet if configured
-            if (blockchain_1.blockchainConfig.enforceTestnet && network === Wallet_1.Network.MAINNET) {
+            if (blockchainConfig.enforceTestnet && network === Network.MAINNET) {
                 const error = 'Mainnet transactions are not allowed. Please use testnet.';
                 console.error('[TRANSACTION ERROR]', { error, network, fromAddress });
                 throw new Error(error);
             }
             // Validate addresses
             try {
-                normalizedFromAddress = (0, addressValidation_1.validateAndNormalizeAddress)(fromAddress);
-                normalizedToAddress = (0, addressValidation_1.validateAndNormalizeAddress)(toAddress);
+                normalizedFromAddress = validateAndNormalizeAddress(fromAddress);
+                normalizedToAddress = validateAndNormalizeAddress(toAddress);
             }
             catch (error) {
                 const errorMsg = `Address validation failed: ${error instanceof Error ? error.message : 'Unknown error'}`;
@@ -67,7 +64,7 @@ class TransactionService {
                 throw new Error(error);
             }
             // Log transaction attempt
-            await AuditLogService_1.AuditLogService.logPending(AuditLog_1.AuditAction.TRANSACTION_SEND, {
+            await AuditLogService.logPending(AuditAction.TRANSACTION_SEND, {
                 userId: wallet.userId,
                 walletAddress: normalizedFromAddress,
                 metadata: {
@@ -78,7 +75,7 @@ class TransactionService {
             });
             // Check balance
             const balance = await this.walletService.getBalance(normalizedFromAddress, network);
-            const amountInWei = ethers_1.ethers.parseEther(amount);
+            const amountInWei = ethers.parseEther(amount);
             if (BigInt(balance.balanceInWei) < amountInWei) {
                 const error = 'Insufficient balance';
                 console.error('[TRANSACTION ERROR]', {
@@ -92,7 +89,7 @@ class TransactionService {
             // Get private key (decrypted)
             const privateKey = await this.walletService.getPrivateKeyByAddress(normalizedFromAddress);
             // Create wallet instance from private key
-            const walletInstance = new ethers_1.ethers.Wallet(privateKey);
+            const walletInstance = new ethers.Wallet(privateKey);
             // Get current gas price and nonce
             const gasPrice = await this.blockchainService.getGasPrice();
             const nonce = await this.blockchainService.getTransactionCount(normalizedFromAddress);
@@ -100,7 +97,7 @@ class TransactionService {
                 from: normalizedFromAddress,
                 to: normalizedToAddress,
                 amount,
-                gasPrice: ethers_1.ethers.formatUnits(gasPrice, 'gwei') + ' gwei',
+                gasPrice: ethers.formatUnits(gasPrice, 'gwei') + ' gwei',
                 nonce,
             });
             // Create transaction request for gas estimation
@@ -128,13 +125,13 @@ class TransactionService {
             // Check if balance is sufficient (including gas fees)
             const totalCost = amountInWei + (gasLimit * gasPrice);
             if (BigInt(balance.balanceInWei) < totalCost) {
-                const error = `Insufficient balance. Required: ${ethers_1.ethers.formatEther(totalCost)} ETH (including gas fees)`;
+                const error = `Insufficient balance. Required: ${ethers.formatEther(totalCost)} ETH (including gas fees)`;
                 console.error('[TRANSACTION ERROR]', {
                     error,
                     balance: balance.balance,
                     amount,
-                    gasFee: ethers_1.ethers.formatEther(gasLimit * gasPrice),
-                    totalRequired: ethers_1.ethers.formatEther(totalCost),
+                    gasFee: ethers.formatEther(gasLimit * gasPrice),
+                    totalRequired: ethers.formatEther(totalCost),
                 });
                 throw new Error(error);
             }
@@ -158,13 +155,13 @@ class TransactionService {
                 amount,
             });
             // Save transaction to database within the transaction
-            const transactionRepository = queryRunner.manager.getRepository(Transaction_1.Transaction);
+            const transactionRepository = queryRunner.manager.getRepository(Transaction);
             const transaction = transactionRepository.create({
                 hash: txHash,
                 fromAddress: normalizedFromAddress,
                 toAddress: normalizedToAddress,
                 amount: amountInWei.toString(),
-                status: Transaction_1.TransactionStatus.PENDING,
+                status: TransactionStatus.PENDING,
                 network,
                 walletId: wallet.id,
                 gasPrice: gasPrice.toString(),
@@ -173,7 +170,7 @@ class TransactionService {
             // Commit the database transaction
             await queryRunner.commitTransaction();
             // Log successful transaction
-            await AuditLogService_1.AuditLogService.logSuccess(AuditLog_1.AuditAction.TRANSACTION_SEND, {
+            await AuditLogService.logSuccess(AuditAction.TRANSACTION_SEND, {
                 userId: wallet.userId,
                 walletAddress: normalizedFromAddress,
                 transactionHash: txHash,
@@ -207,7 +204,7 @@ class TransactionService {
             });
             // Log failed transaction
             if (wallet) {
-                await AuditLogService_1.AuditLogService.logFailure(AuditLog_1.AuditAction.TRANSACTION_SEND, errorMessage, {
+                await AuditLogService.logFailure(AuditAction.TRANSACTION_SEND, errorMessage, {
                     userId: wallet.userId,
                     walletAddress: normalizedFromAddress,
                     transactionHash: txHash,
@@ -239,8 +236,8 @@ class TransactionService {
             try {
                 const receipt = await this.blockchainService.getTransactionReceipt(txHash);
                 if (receipt) {
-                    const transactionRepository = database_1.AppDataSource.getRepository(Transaction_1.Transaction);
-                    const newStatus = receipt.status === 1 ? Transaction_1.TransactionStatus.CONFIRMED : Transaction_1.TransactionStatus.FAILED;
+                    const transactionRepository = AppDataSource.getRepository(Transaction);
+                    const newStatus = receipt.status === 1 ? TransactionStatus.CONFIRMED : TransactionStatus.FAILED;
                     await transactionRepository.update(transactionId, {
                         status: newStatus,
                         blockNumber: receipt.blockNumber,
@@ -253,8 +250,8 @@ class TransactionService {
                         gasUsed: receipt.gasUsed.toString(),
                     });
                     // Log confirmation or failure
-                    if (newStatus === Transaction_1.TransactionStatus.CONFIRMED) {
-                        await AuditLogService_1.AuditLogService.logSuccess(AuditLog_1.AuditAction.TRANSACTION_CONFIRM, {
+                    if (newStatus === TransactionStatus.CONFIRMED) {
+                        await AuditLogService.logSuccess(AuditAction.TRANSACTION_CONFIRM, {
                             userId,
                             transactionHash: txHash,
                             metadata: {
@@ -264,7 +261,7 @@ class TransactionService {
                         });
                     }
                     else {
-                        await AuditLogService_1.AuditLogService.logFailure(AuditLog_1.AuditAction.TRANSACTION_FAIL, 'Transaction failed on blockchain', {
+                        await AuditLogService.logFailure(AuditAction.TRANSACTION_FAIL, 'Transaction failed on blockchain', {
                             userId,
                             transactionHash: txHash,
                             metadata: {
@@ -297,7 +294,7 @@ class TransactionService {
      * @returns Transaction or null if not found
      */
     async getTransactionByHash(hash) {
-        const transactionRepository = database_1.AppDataSource.getRepository(Transaction_1.Transaction);
+        const transactionRepository = AppDataSource.getRepository(Transaction);
         return transactionRepository.findOne({
             where: { hash },
             relations: ['wallet'],
@@ -311,12 +308,12 @@ class TransactionService {
      * @returns Array of transactions
      */
     async getTransactionHistory(address, network, limit = 10) {
-        const normalizedAddress = (0, addressValidation_1.validateAndNormalizeAddress)(address);
+        const normalizedAddress = validateAndNormalizeAddress(address);
         // Get from blockchain API
         const blockchainTransactions = await this.blockchainService.getTransactionHistory(normalizedAddress, limit);
         // Get from database
         const wallet = await this.walletService.getWalletByAddress(normalizedAddress);
-        const transactionRepository = database_1.AppDataSource.getRepository(Transaction_1.Transaction);
+        const transactionRepository = AppDataSource.getRepository(Transaction);
         let dbTransactions = [];
         if (wallet) {
             dbTransactions = await transactionRepository.find({
@@ -333,13 +330,13 @@ class TransactionService {
                 // Map blockchain status to TransactionStatus enum
                 let status;
                 if (blockchainTx.status === 'confirmed') {
-                    status = Transaction_1.TransactionStatus.CONFIRMED;
+                    status = TransactionStatus.CONFIRMED;
                 }
                 else if (blockchainTx.status === 'failed') {
-                    status = Transaction_1.TransactionStatus.FAILED;
+                    status = TransactionStatus.FAILED;
                 }
                 else {
-                    status = Transaction_1.TransactionStatus.PENDING;
+                    status = TransactionStatus.PENDING;
                 }
                 // Convert blockchain transaction to database format
                 const transaction = transactionRepository.create({
@@ -367,5 +364,4 @@ class TransactionService {
             .slice(0, limit);
     }
 }
-exports.TransactionService = TransactionService;
 //# sourceMappingURL=TransactionService.js.map

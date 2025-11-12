@@ -1,11 +1,8 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.InitialSchema1700000000000 = void 0;
-const typeorm_1 = require("typeorm");
-class InitialSchema1700000000000 {
+import { Table, TableForeignKey, TableIndex } from 'typeorm';
+export class InitialSchema1700000000000 {
     async up(queryRunner) {
         // Create users table
-        await queryRunner.createTable(new typeorm_1.Table({
+        await queryRunner.createTable(new Table({
             name: 'users',
             columns: [
                 {
@@ -38,7 +35,7 @@ class InitialSchema1700000000000 {
             ],
         }), true);
         // Create wallets table
-        await queryRunner.createTable(new typeorm_1.Table({
+        await queryRunner.createTable(new Table({
             name: 'wallets',
             columns: [
                 {
@@ -80,7 +77,7 @@ class InitialSchema1700000000000 {
             ],
         }), true);
         // Create transactions table
-        await queryRunner.createTable(new typeorm_1.Table({
+        await queryRunner.createTable(new Table({
             name: 'transactions',
             columns: [
                 {
@@ -157,32 +154,32 @@ class InitialSchema1700000000000 {
             ],
         }), true);
         // Create foreign keys
-        await queryRunner.createForeignKey('wallets', new typeorm_1.TableForeignKey({
+        await queryRunner.createForeignKey('wallets', new TableForeignKey({
             columnNames: ['userId'],
             referencedColumnNames: ['id'],
             referencedTableName: 'users',
             onDelete: 'CASCADE',
         }));
-        await queryRunner.createForeignKey('transactions', new typeorm_1.TableForeignKey({
+        await queryRunner.createForeignKey('transactions', new TableForeignKey({
             columnNames: ['walletId'],
             referencedColumnNames: ['id'],
             referencedTableName: 'wallets',
             onDelete: 'CASCADE',
         }));
         // Create indexes
-        await queryRunner.createIndex('wallets', new typeorm_1.TableIndex({
+        await queryRunner.createIndex('wallets', new TableIndex({
             name: 'IDX_wallets_address',
             columnNames: ['address'],
         }));
-        await queryRunner.createIndex('wallets', new typeorm_1.TableIndex({
+        await queryRunner.createIndex('wallets', new TableIndex({
             name: 'IDX_wallets_userId',
             columnNames: ['userId'],
         }));
-        await queryRunner.createIndex('transactions', new typeorm_1.TableIndex({
+        await queryRunner.createIndex('transactions', new TableIndex({
             name: 'IDX_transactions_hash',
             columnNames: ['hash'],
         }));
-        await queryRunner.createIndex('transactions', new typeorm_1.TableIndex({
+        await queryRunner.createIndex('transactions', new TableIndex({
             name: 'IDX_transactions_fromAddress',
             columnNames: ['fromAddress'],
         }));
@@ -193,5 +190,4 @@ class InitialSchema1700000000000 {
         await queryRunner.dropTable('users');
     }
 }
-exports.InitialSchema1700000000000 = InitialSchema1700000000000;
 //# sourceMappingURL=1700000000000-InitialSchema.js.map

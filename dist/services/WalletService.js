@@ -1,21 +1,18 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.WalletService = void 0;
-const ethers_1 = require("ethers");
-const database_1 = require("../config/database");
-const Wallet_1 = require("../entities/Wallet");
-const EncryptionService_1 = require("./EncryptionService");
-const BlockchainService_1 = require("./BlockchainService");
-const AuditLogService_1 = require("./AuditLogService");
-const AuditLog_1 = require("../entities/AuditLog");
-const addressValidation_1 = require("../utils/addressValidation");
-const blockchain_1 = require("../config/blockchain");
+import { ethers } from 'ethers';
+import { AppDataSource } from '../config/database';
+import { Wallet, Network } from '../entities/Wallet';
+import { EncryptionService } from './EncryptionService';
+import { BlockchainService } from './BlockchainService';
+import { AuditLogService } from './AuditLogService';
+import { AuditAction } from '../entities/AuditLog';
+import { validateAndNormalizeAddress } from '../utils/addressValidation';
+import { blockchainConfig } from '../config/blockchain';
 /**
  * Service for wallet operations
  */
-class WalletService {
-    constructor(_network = Wallet_1.Network.TESTNET) {
-        this.encryptionService = new EncryptionService_1.EncryptionService();
+export class WalletService {
+    constructor(_network = Network.TESTNET) {
+        this.encryptionService = new EncryptionService();
     }
     /**
      * Creates a new wallet for a user
@@ -23,17 +20,17 @@ class WalletService {
      * @param network - The network (testnet/mainnet)
      * @returns The created wallet (without private key)
      */
-    async createWallet(userId, network = Wallet_1.Network.TESTNET) {
+    async createWallet(userId, network = Network.TESTNET) {
         try {
             // Enforce testnet if configured
-            if (blockchain_1.blockchainConfig.enforceTestnet && network === Wallet_1.Network.MAINNET) {
+            if (blockchainConfig.enforceTestnet && network === Network.MAINNET) {
                 const error = 'Mainnet transactions are not allowed. Please use testnet.';
                 console.error('[WALLET ERROR]', { error, userId, network });
                 throw new Error(error);
             }
             console.log('[WALLET INFO] Creating new wallet:', { userId, network });
             // Generate new wallet using ethers.js
-            const wallet = ethers_1.ethers.Wallet.createRandom();
+            const wallet = ethers.Wallet.createRandom();
             const address = wallet.address;
             const privateKey = wallet.privateKey;
             // Encrypt the private key
@@ -41,7 +38,7 @@ class WalletService {
             // Clear private key from memory
             // Note: In a real application, you might want to use secure memory clearing
             // Save wallet to database
-            const walletRepository = database_1.AppDataSource.getRepository(Wallet_1.Wallet);
+            const walletRepository = AppDataSource.getRepository(Wallet);
             const newWallet = await walletRepository.create({
                 address,
                 privateKeyEncrypted: encryptedPrivateKey,
@@ -51,7 +48,7 @@ class WalletService {
             const savedWallet = await walletRepository.save(newWallet);
             // console.log('[WALLET SUCCESS] Wallet created:', { address, userId, network });
             // Log wallet creation
-            await AuditLogService_1.AuditLogService.logSuccess(AuditLog_1.AuditAction.WALLET_CREATE, {
+            await AuditLogService.logSuccess(AuditAction.WALLET_CREATE, {
                 userId,
                 walletAddress: address,
                 metadata: { network },
@@ -67,7 +64,7 @@ class WalletService {
                 network,
             });
             // Log failure
-            await AuditLogService_1.AuditLogService.logFailure(AuditLog_1.AuditAction.WALLET_CREATE, errorMessage, {
+            await AuditLogService.logFailure(AuditAction.WALLET_CREATE, errorMessage, {
                 userId,
                 metadata: { network },
             });
@@ -81,8 +78,8 @@ class WalletService {
      * @returns The wallet or null if not found
      */
     async getWalletByAddress(address, userId) {
-        const normalizedAddress = (0, addressValidation_1.validateAndNormalizeAddress)(address);
-        const walletRepository = database_1.AppDataSource.getRepository(Wallet_1.Wallet);
+        const normalizedAddress = validateAndNormalizeAddress(address);
+        const walletRepository = AppDataSource.getRepository(Wallet);
         const where = { address: normalizedAddress };
         if (userId) {
             where.userId = userId;
@@ -95,7 +92,7 @@ class WalletService {
      * @returns Array of wallets
      */
     async getUserWallets(userId) {
-        const walletRepository = database_1.AppDataSource.getRepository(Wallet_1.Wallet);
+        const walletRepository = AppDataSource.getRepository(Wallet);
         return walletRepository.find({
             where: { userId },
             relations: ['transactions'],
@@ -110,10 +107,10 @@ class WalletService {
      */
     async getBalance(address, network) {
         try {
-            const normalizedAddress = (0, addressValidation_1.validateAndNormalizeAddress)(address);
-            const blockchainService = new BlockchainService_1.BlockchainService(network);
+            const normalizedAddress = validateAndNormalizeAddress(address);
+            const blockchainService = new BlockchainService(network);
             const balanceInWei = await blockchainService.getBalance(normalizedAddress);
-            const balance = ethers_1.ethers.formatEther(balanceInWei);
+            const balance = ethers.formatEther(balanceInWei);
             console.log('[WALLET INFO] Balance retrieved:', {
                 address: normalizedAddress,
                 balance,
@@ -142,7 +139,7 @@ class WalletService {
      * @returns The decrypted private key
      */
     async getPrivateKey(walletId, userId) {
-        const walletRepository = database_1.AppDataSource.getRepository(Wallet_1.Wallet);
+        const walletRepository = AppDataSource.getRepository(Wallet);
         const wallet = await walletRepository.findOne({
             where: { id: walletId, userId },
         });
@@ -159,7 +156,7 @@ class WalletService {
      * @returns The decrypted private key
      */
     async getPrivateKeyByAddress(address) {
-        const normalizedAddress = (0, addressValidation_1.validateAndNormalizeAddress)(address);
+        const normalizedAddress = validateAndNormalizeAddress(address);
         const wallet = await this.getWalletByAddress(normalizedAddress);
         if (!wallet) {
             throw new Error('Wallet not found');
@@ -168,5 +165,4 @@ class WalletService {
         return this.encryptionService.decrypt(wallet.privateKeyEncrypted);
     }
 }
-exports.WalletService = WalletService;
 //# sourceMappingURL=WalletService.js.map

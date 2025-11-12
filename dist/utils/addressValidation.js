@@ -1,17 +1,12 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.isValidAddress = isValidAddress;
-exports.toChecksumAddress = toChecksumAddress;
-exports.validateAndNormalizeAddress = validateAndNormalizeAddress;
-const ethers_1 = require("ethers");
+import { getAddress, isAddress } from 'ethers';
 /**
  * Validates an Ethereum address format
  * @param address - The address to validate
  * @returns true if valid, false otherwise
  */
-function isValidAddress(address) {
+export function isValidAddress(address) {
     try {
-        return (0, ethers_1.isAddress)(address);
+        return isAddress(address);
     }
     catch {
         return false;
@@ -23,11 +18,11 @@ function isValidAddress(address) {
  * @returns The checksummed address
  * @throws Error if address is invalid
  */
-function toChecksumAddress(address) {
+export function toChecksumAddress(address) {
     if (!isValidAddress(address)) {
         throw new Error('Invalid Ethereum address');
     }
-    return (0, ethers_1.getAddress)(address);
+    return getAddress(address);
 }
 /**
  * Validates and normalizes an Ethereum address
@@ -35,7 +30,7 @@ function toChecksumAddress(address) {
  * @returns The checksummed address
  * @throws Error if address is invalid
  */
-function validateAndNormalizeAddress(address) {
+export function validateAndNormalizeAddress(address) {
     if (!address || typeof address !== 'string') {
         throw new Error('Address must be a non-empty string');
     }

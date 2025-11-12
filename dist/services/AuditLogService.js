@@ -1,12 +1,9 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.AuditLogService = void 0;
-const database_1 = require("../config/database");
-const AuditLog_1 = require("../entities/AuditLog");
+import { AppDataSource } from '../config/database';
+import { AuditLog, AuditStatus } from '../entities/AuditLog';
 /**
  * Service for audit logging
  */
-class AuditLogService {
+export class AuditLogService {
     /**
      * Creates an audit log entry
      * @param data - Audit log data
@@ -14,7 +11,7 @@ class AuditLogService {
      */
     static async log(data) {
         try {
-            const auditLogRepository = database_1.AppDataSource.getRepository(AuditLog_1.AuditLog);
+            const auditLogRepository = AppDataSource.getRepository(AuditLog);
             const auditLog = auditLogRepository.create({
                 action: data.action,
                 status: data.status,
@@ -52,7 +49,7 @@ class AuditLogService {
     static async logSuccess(action, data) {
         await this.log({
             action,
-            status: AuditLog_1.AuditStatus.SUCCESS,
+            status: AuditStatus.SUCCESS,
             ...data,
         }).catch((error) => {
             console.error('[AUDIT] Failed to log success:', error);
@@ -64,7 +61,7 @@ class AuditLogService {
     static async logFailure(action, errorMessage, data) {
         await this.log({
             action,
-            status: AuditLog_1.AuditStatus.FAILURE,
+            status: AuditStatus.FAILURE,
             errorMessage,
             ...data,
         }).catch((error) => {
@@ -77,7 +74,7 @@ class AuditLogService {
     static async logPending(action, data) {
         await this.log({
             action,
-            status: AuditLog_1.AuditStatus.PENDING,
+            status: AuditStatus.PENDING,
             ...data,
         }).catch((error) => {
             console.error('[AUDIT] Failed to log pending:', error);
@@ -87,7 +84,7 @@ class AuditLogService {
      * Gets audit logs for a user
      */
     static async getUserLogs(userId, limit = 50) {
-        const auditLogRepository = database_1.AppDataSource.getRepository(AuditLog_1.AuditLog);
+        const auditLogRepository = AppDataSource.getRepository(AuditLog);
         return auditLogRepository.find({
             where: { userId },
             order: { createdAt: 'DESC' },
@@ -98,7 +95,7 @@ class AuditLogService {
      * Gets audit logs for a wallet
      */
     static async getWalletLogs(walletAddress, limit = 50) {
-        const auditLogRepository = database_1.AppDataSource.getRepository(AuditLog_1.AuditLog);
+        const auditLogRepository = AppDataSource.getRepository(AuditLog);
         return auditLogRepository.find({
             where: { walletAddress },
             order: { createdAt: 'DESC' },
@@ -109,12 +106,11 @@ class AuditLogService {
      * Gets audit logs for a transaction
      */
     static async getTransactionLogs(transactionHash) {
-        const auditLogRepository = database_1.AppDataSource.getRepository(AuditLog_1.AuditLog);
+        const auditLogRepository = AppDataSource.getRepository(AuditLog);
         return auditLogRepository.find({
             where: { transactionHash },
             order: { createdAt: 'DESC' },
         });
     }
 }
-exports.AuditLogService = AuditLogService;
 //# sourceMappingURL=AuditLogService.js.map

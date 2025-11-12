@@ -1,3 +1,3 @@
 import 'reflect-metadata';
-import './resolvers/enums';
+import './resolvers/enums.js';
 //# sourceMappingURL=server.d.ts.map

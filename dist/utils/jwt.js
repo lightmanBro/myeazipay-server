@@ -1,23 +1,16 @@
-"use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.generateToken = generateToken;
-exports.verifyToken = verifyToken;
-const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
-const app_1 = require("../config/app");
+import jwt from 'jsonwebtoken';
+import { appConfig } from '../config/app';
 /**
  * Generates a JWT token
  * @param payload - The payload to encode
  * @returns JWT token
  */
-function generateToken(payload) {
-    if (!app_1.appConfig.jwtSecret) {
+export function generateToken(payload) {
+    if (!appConfig.jwtSecret) {
         throw new Error('JWT_SECRET is not configured');
     }
-    return jsonwebtoken_1.default.sign(payload, app_1.appConfig.jwtSecret, {
-        expiresIn: app_1.appConfig.jwtExpiresIn,
+    return jwt.sign(payload, appConfig.jwtSecret, {
+        expiresIn: appConfig.jwtExpiresIn,
     });
 }
 /**
@@ -25,9 +18,9 @@ function generateToken(payload) {
  * @param token - The token to verify
  * @returns Decoded payload
  */
-function verifyToken(token) {
+export function verifyToken(token) {
     try {
-        return jsonwebtoken_1.default.verify(token, app_1.appConfig.jwtSecret);
+        return jwt.verify(token, appConfig.jwtSecret);
     }
     catch (error) {
         throw new Error('Invalid or expired token');

@@ -1,12 +1,9 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.authMiddleware = authMiddleware;
-const jwt_1 = require("../utils/jwt");
+import { verifyToken } from '../utils/jwt';
 /**
  * Authentication middleware for Express
  * Extracts and verifies JWT token from Authorization header
  */
-function authMiddleware(req, res, next) {
+export function authMiddleware(req, res, next) {
     try {
         const authHeader = req.headers.authorization;
         if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -14,7 +11,7 @@ function authMiddleware(req, res, next) {
             return;
         }
         const token = authHeader.substring(7); // Remove 'Bearer ' prefix
-        const payload = (0, jwt_1.verifyToken)(token);
+        const payload = verifyToken(token);
         req.user = payload;
         next();
     }

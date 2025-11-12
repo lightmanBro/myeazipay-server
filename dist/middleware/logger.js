@@ -1,11 +1,8 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.loggerMiddleware = loggerMiddleware;
 /**
  * Simple request logging middleware
  * In production, you might want to use a proper logging library like Winston or Pino
  */
-function loggerMiddleware(req, res, next) {
+export function loggerMiddleware(req, res, next) {
     const start = Date.now();
     res.on('finish', () => {
         const duration = Date.now() - start;
