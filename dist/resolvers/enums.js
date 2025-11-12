@@ -1,10 +1,12 @@
-import { registerEnumType } from 'type-graphql';
-import { Network } from '../entities/Wallet';
-import { TransactionStatus } from '../entities/Transaction';
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const type_graphql_1 = require("type-graphql");
+const Wallet_1 = require("../entities/Wallet");
+const Transaction_1 = require("../entities/Transaction");
 // Register Network enum
 // GraphQL enum values must match the TypeScript enum keys (TESTNET, MAINNET)
 // not the values ('testnet', 'mainnet')
-registerEnumType(Network, {
+(0, type_graphql_1.registerEnumType)(Wallet_1.Network, {
     name: 'Network',
     description: 'Blockchain network type',
     valuesConfig: {
@@ -17,7 +19,7 @@ registerEnumType(Network, {
     },
 });
 // Register TransactionStatus enum
-registerEnumType(TransactionStatus, {
+(0, type_graphql_1.registerEnumType)(Transaction_1.TransactionStatus, {
     name: 'TransactionStatus',
     description: 'Transaction status',
     valuesConfig: {

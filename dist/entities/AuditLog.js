@@ -1,3 +1,4 @@
+"use strict";
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
@@ -7,8 +8,10 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, Index, } from 'typeorm';
-export var AuditAction;
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.AuditLog = exports.AuditStatus = exports.AuditAction = void 0;
+const typeorm_1 = require("typeorm");
+var AuditAction;
 (function (AuditAction) {
     AuditAction["USER_REGISTER"] = "user_register";
     AuditAction["USER_LOGIN"] = "user_login";
@@ -18,70 +21,70 @@ export var AuditAction;
     AuditAction["TRANSACTION_FAIL"] = "transaction_fail";
     AuditAction["BALANCE_CHECK"] = "balance_check";
     AuditAction["WALLET_ACCESS"] = "wallet_access";
-})(AuditAction || (AuditAction = {}));
-export var AuditStatus;
+})(AuditAction || (exports.AuditAction = AuditAction = {}));
+var AuditStatus;
 (function (AuditStatus) {
     AuditStatus["SUCCESS"] = "success";
     AuditStatus["FAILURE"] = "failure";
     AuditStatus["PENDING"] = "pending";
-})(AuditStatus || (AuditStatus = {}));
+})(AuditStatus || (exports.AuditStatus = AuditStatus = {}));
 let AuditLog = class AuditLog {
 };
+exports.AuditLog = AuditLog;
 __decorate([
-    PrimaryGeneratedColumn(),
+    (0, typeorm_1.PrimaryGeneratedColumn)(),
     __metadata("design:type", Number)
 ], AuditLog.prototype, "id", void 0);
 __decorate([
-    Column({
+    (0, typeorm_1.Column)({
         type: 'varchar',
         length: 50,
     }),
-    Index(),
+    (0, typeorm_1.Index)(),
     __metadata("design:type", String)
 ], AuditLog.prototype, "action", void 0);
 __decorate([
-    Column({
+    (0, typeorm_1.Column)({
         type: 'varchar',
         length: 20,
     }),
     __metadata("design:type", String)
 ], AuditLog.prototype, "status", void 0);
 __decorate([
-    Column({ nullable: true }),
-    Index(),
+    (0, typeorm_1.Column)({ nullable: true }),
+    (0, typeorm_1.Index)(),
     __metadata("design:type", Number)
 ], AuditLog.prototype, "userId", void 0);
 __decorate([
-    Column({ nullable: true }),
+    (0, typeorm_1.Column)({ nullable: true }),
     __metadata("design:type", String)
 ], AuditLog.prototype, "walletAddress", void 0);
 __decorate([
-    Column({ nullable: true }),
+    (0, typeorm_1.Column)({ nullable: true }),
     __metadata("design:type", String)
 ], AuditLog.prototype, "transactionHash", void 0);
 __decorate([
-    Column('text', { nullable: true }),
+    (0, typeorm_1.Column)('text', { nullable: true }),
     __metadata("design:type", String)
 ], AuditLog.prototype, "metadata", void 0);
 __decorate([
-    Column('text', { nullable: true }),
+    (0, typeorm_1.Column)('text', { nullable: true }),
     __metadata("design:type", String)
 ], AuditLog.prototype, "errorMessage", void 0);
 __decorate([
-    Column({ nullable: true }),
+    (0, typeorm_1.Column)({ nullable: true }),
     __metadata("design:type", String)
 ], AuditLog.prototype, "ipAddress", void 0);
 __decorate([
-    Column({ nullable: true }),
+    (0, typeorm_1.Column)({ nullable: true }),
     __metadata("design:type", String)
 ], AuditLog.prototype, "userAgent", void 0);
 __decorate([
-    CreateDateColumn(),
-    Index(),
+    (0, typeorm_1.CreateDateColumn)(),
+    (0, typeorm_1.Index)(),
     __metadata("design:type", Date)
 ], AuditLog.prototype, "createdAt", void 0);
-AuditLog = __decorate([
-    Entity('audit_logs')
+exports.AuditLog = AuditLog = __decorate([
+    (0, typeorm_1.Entity)('audit_logs')
 ], AuditLog);
-export { AuditLog };
 //# sourceMappingURL=AuditLog.js.map

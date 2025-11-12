@@ -1,8 +1,8 @@
 import { DataSource } from 'typeorm';
-import { User } from '../entities/User.js';
-import { Wallet } from '../entities/Wallet.js';
-import { Transaction } from '../entities/Transaction.js';
-import { AuditLog } from '../entities/AuditLog.js';
+import { User } from '../entities/User';
+import { Wallet } from '../entities/Wallet';
+import { Transaction } from '../entities/Transaction';
+import { AuditLog } from '../entities/AuditLog';
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -18,8 +18,12 @@ export const AppDataSource = new DataSource({
   entities: [User, Wallet, Transaction, AuditLog],
   synchronize: process.env.NODE_ENV === 'development',
   logging: process.env.NODE_ENV === 'development',
-  migrations: ['dist/migrations/**/*.js'], // Changed to .js
-  migrationsTableName: 'migrations',
+  // migrations: [
+  //   process.env.NODE_ENV === 'production' 
+  //     ? 'dist/migrations/**/*.js'  // Production: use compiled JS
+  //     : 'src/migrations/**/*.ts'   // Development: use TS files
+  // ],
+  // migrationsTableName: 'migrations',
   ssl:
     process.env.NODE_ENV === 'production'
       ? { rejectUnauthorized: false }

@@ -1,5 +1,11 @@
-import crypto from 'crypto';
-import { appConfig } from '../config/app';
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.EncryptionService = void 0;
+const crypto_1 = __importDefault(require("crypto"));
+const app_1 = require("../config/app");
 const ALGORITHM = 'aes-256-gcm';
 const IV_LENGTH = 16;
 const SALT_LENGTH = 64;
@@ -8,9 +14,9 @@ const KEY_LENGTH = 32;
  * Service for encrypting and decrypting private keys
  * Uses AES-256-GCM for authenticated encryption
  */
-export class EncryptionService {
+class EncryptionService {
     constructor() {
-        const key = appConfig.encryptionKey;
+        const key = app_1.appConfig.encryptionKey;
         if (!key || key.length < 32) {
             throw new Error('ENCRYPTION_KEY must be at least 32 bytes long');
         }
@@ -27,12 +33,12 @@ export class EncryptionService {
             throw new Error('Private key must be a non-empty string');
         }
         // Generate random IV and salt
-        const iv = crypto.randomBytes(IV_LENGTH);
-        const salt = crypto.randomBytes(SALT_LENGTH);
+        const iv = crypto_1.default.randomBytes(IV_LENGTH);
+        const salt = crypto_1.default.randomBytes(SALT_LENGTH);
         // Derive key from encryption key and salt
-        const key = crypto.pbkdf2Sync(this.encryptionKey, salt, 100000, KEY_LENGTH, 'sha256');
+        const key = crypto_1.default.pbkdf2Sync(this.encryptionKey, salt, 100000, KEY_LENGTH, 'sha256');
         // Create cipher
-        const cipher = crypto.createCipheriv(ALGORITHM, key, iv);
+        const cipher = crypto_1.default.createCipheriv(ALGORITHM, key, iv);
         // Encrypt the private key
         let encrypted = cipher.update(privateKey, 'utf8', 'hex');
         encrypted += cipher.final('hex');
@@ -61,9 +67,9 @@ export class EncryptionService {
             const salt = Buffer.from(saltHex, 'hex');
             const tag = Buffer.from(tagHex, 'hex');
             // Derive key from encryption key and salt
-            const key = crypto.pbkdf2Sync(this.encryptionKey, salt, 100000, KEY_LENGTH, 'sha256');
+            const key = crypto_1.default.pbkdf2Sync(this.encryptionKey, salt, 100000, KEY_LENGTH, 'sha256');
             // Create decipher
-            const decipher = crypto.createDecipheriv(ALGORITHM, key, iv);
+            const decipher = crypto_1.default.createDecipheriv(ALGORITHM, key, iv);
             decipher.setAuthTag(tag);
             // Decrypt the private key
             let decrypted = decipher.update(encrypted, 'hex', 'utf8');
@@ -75,4 +81,5 @@ export class EncryptionService {
         }
     }
 }
+exports.EncryptionService = EncryptionService;
 //# sourceMappingURL=EncryptionService.js.map

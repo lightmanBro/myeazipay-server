@@ -1,3 +1,4 @@
+"use strict";
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
@@ -10,70 +11,75 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
-import { Resolver, Mutation, Arg, ObjectType, Field, Query, Ctx, Authorized } from 'type-graphql';
-import { AppDataSource } from '../config/database';
-import { User } from '../entities/User';
-import bcrypt from 'bcryptjs';
-import { generateToken } from '../utils/jwt';
-import { AuthenticationError, ValidationError } from '../middleware/errorHandler';
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.UserResolver = void 0;
+const type_graphql_1 = require("type-graphql");
+const database_1 = require("../config/database");
+const User_1 = require("../entities/User");
+const bcryptjs_1 = __importDefault(require("bcryptjs"));
+const jwt_1 = require("../utils/jwt");
+const errorHandler_1 = require("../middleware/errorHandler");
 let WalletType = class WalletType {
 };
 __decorate([
-    Field(),
+    (0, type_graphql_1.Field)(),
     __metadata("design:type", Number)
 ], WalletType.prototype, "id", void 0);
 __decorate([
-    Field(),
+    (0, type_graphql_1.Field)(),
     __metadata("design:type", String)
 ], WalletType.prototype, "address", void 0);
 __decorate([
-    Field(),
+    (0, type_graphql_1.Field)(),
     __metadata("design:type", String)
 ], WalletType.prototype, "network", void 0);
 __decorate([
-    Field(),
+    (0, type_graphql_1.Field)(),
     __metadata("design:type", Date)
 ], WalletType.prototype, "createdAt", void 0);
 WalletType = __decorate([
-    ObjectType()
+    (0, type_graphql_1.ObjectType)()
 ], WalletType);
 let UserType = class UserType {
 };
 __decorate([
-    Field(),
+    (0, type_graphql_1.Field)(),
     __metadata("design:type", Number)
 ], UserType.prototype, "id", void 0);
 __decorate([
-    Field(),
+    (0, type_graphql_1.Field)(),
     __metadata("design:type", String)
 ], UserType.prototype, "email", void 0);
 __decorate([
-    Field(() => [WalletType]),
+    (0, type_graphql_1.Field)(() => [WalletType]),
     __metadata("design:type", Array)
 ], UserType.prototype, "wallets", void 0);
 __decorate([
-    Field(),
+    (0, type_graphql_1.Field)(),
     __metadata("design:type", Date)
 ], UserType.prototype, "createdAt", void 0);
 __decorate([
-    Field(),
+    (0, type_graphql_1.Field)(),
     __metadata("design:type", Date)
 ], UserType.prototype, "updatedAt", void 0);
 UserType = __decorate([
-    ObjectType()
+    (0, type_graphql_1.ObjectType)()
 ], UserType);
 let AuthResponse = class AuthResponse {
 };
 __decorate([
-    Field(),
+    (0, type_graphql_1.Field)(),
     __metadata("design:type", String)
 ], AuthResponse.prototype, "token", void 0);
 __decorate([
-    Field(() => UserType),
+    (0, type_graphql_1.Field)(() => UserType),
     __metadata("design:type", UserType)
 ], AuthResponse.prototype, "user", void 0);
 AuthResponse = __decorate([
-    ObjectType()
+    (0, type_graphql_1.ObjectType)()
 ], AuthResponse);
 let UserResolver = class UserResolver {
     /**
@@ -82,19 +88,19 @@ let UserResolver = class UserResolver {
     async register(email, password) {
         // Validate input
         if (!email || !email.includes('@')) {
-            throw new ValidationError('Invalid email address');
+            throw new errorHandler_1.ValidationError('Invalid email address');
         }
         if (!password || password.length < 6) {
-            throw new ValidationError('Password must be at least 6 characters long');
+            throw new errorHandler_1.ValidationError('Password must be at least 6 characters long');
         }
-        const userRepository = AppDataSource.getRepository(User);
+        const userRepository = database_1.AppDataSource.getRepository(User_1.User);
         // Check if user already exists
         const existingUser = await userRepository.findOne({ where: { email } });
         if (existingUser) {
-            throw new ValidationError('User with this email already exists');
+            throw new errorHandler_1.ValidationError('User with this email already exists');
         }
         // Hash password
-        const passwordHash = await bcrypt.hash(password, 12);
+        const passwordHash = await bcryptjs_1.default.hash(password, 12);
         // Create user
         const user = userRepository.create({
             email,
@@ -102,7 +108,7 @@ let UserResolver = class UserResolver {
         });
         const savedUser = await userRepository.save(user);
         // Generate token
-        const token = generateToken({
+        const token = (0, jwt_1.generateToken)({
             userId: savedUser.id,
             email: savedUser.email,
         });
@@ -121,19 +127,19 @@ let UserResolver = class UserResolver {
      * User login
      */
     async login(email, password) {
-        const userRepository = AppDataSource.getRepository(User);
+        const userRepository = database_1.AppDataSource.getRepository(User_1.User);
         // Find user
         const user = await userRepository.findOne({ where: { email } });
         if (!user) {
-            throw new AuthenticationError('Invalid email or password');
+            throw new errorHandler_1.AuthenticationError('Invalid email or password');
         }
         // Verify password
-        const isValid = await bcrypt.compare(password, user.passwordHash);
+        const isValid = await bcryptjs_1.default.compare(password, user.passwordHash);
         if (!isValid) {
-            throw new AuthenticationError('Invalid email or password');
+            throw new errorHandler_1.AuthenticationError('Invalid email or password');
         }
         // Generate token
-        const token = generateToken({
+        const token = (0, jwt_1.generateToken)({
             userId: user.id,
             email: user.email,
         });
@@ -152,13 +158,13 @@ let UserResolver = class UserResolver {
      * Get current authenticated user
      */
     async me(context) {
-        const userRepository = AppDataSource.getRepository(User);
+        const userRepository = database_1.AppDataSource.getRepository(User_1.User);
         const user = await userRepository.findOne({
             where: { id: context.user.userId },
             relations: ['wallets'],
         });
         if (!user) {
-            throw new AuthenticationError('User not found');
+            throw new errorHandler_1.AuthenticationError('User not found');
         }
         return {
             id: user.id,
@@ -174,32 +180,32 @@ let UserResolver = class UserResolver {
         };
     }
 };
+exports.UserResolver = UserResolver;
 __decorate([
-    Mutation(() => AuthResponse),
-    __param(0, Arg('email')),
-    __param(1, Arg('password')),
+    (0, type_graphql_1.Mutation)(() => AuthResponse),
+    __param(0, (0, type_graphql_1.Arg)('email')),
+    __param(1, (0, type_graphql_1.Arg)('password')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, String]),
     __metadata("design:returntype", Promise)
 ], UserResolver.prototype, "register", null);
 __decorate([
-    Mutation(() => AuthResponse),
-    __param(0, Arg('email')),
-    __param(1, Arg('password')),
+    (0, type_graphql_1.Mutation)(() => AuthResponse),
+    __param(0, (0, type_graphql_1.Arg)('email')),
+    __param(1, (0, type_graphql_1.Arg)('password')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, String]),
     __metadata("design:returntype", Promise)
 ], UserResolver.prototype, "login", null);
 __decorate([
-    Query(() => UserType),
-    Authorized(),
-    __param(0, Ctx()),
+    (0, type_graphql_1.Query)(() => UserType),
+    (0, type_graphql_1.Authorized)(),
+    __param(0, (0, type_graphql_1.Ctx)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", Promise)
 ], UserResolver.prototype, "me", null);
-UserResolver = __decorate([
-    Resolver()
+exports.UserResolver = UserResolver = __decorate([
+    (0, type_graphql_1.Resolver)()
 ], UserResolver);
-export { UserResolver };
 //# sourceMappingURL=UserResolver.js.map

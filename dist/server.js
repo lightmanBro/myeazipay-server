@@ -1,24 +1,29 @@
-import 'reflect-metadata';
-import express from 'express';
-import { ApolloServer } from 'apollo-server-express';
-import { buildSchema } from 'type-graphql';
-import cors from 'cors';
-import helmet from 'helmet';
-import rateLimit from 'express-rate-limit';
-import { AppDataSource } from './config/database.js';
-import { appConfig } from './config/app.js';
-import './resolvers/enums.js'; // Register enums
-import { UserResolver } from './resolvers/UserResolver.js';
-import { WalletResolver } from './resolvers/WalletResolver.js';
-import { TransactionResolver } from './resolvers/TransactionResolver.js';
-import { errorHandler } from './middleware/errorHandler.js';
-import { loggerMiddleware } from './middleware/logger.js';
-import { verifyToken } from './utils/jwt.js';
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+require("reflect-metadata");
+const express_1 = __importDefault(require("express"));
+const apollo_server_express_1 = require("apollo-server-express");
+const type_graphql_1 = require("type-graphql");
+const cors_1 = __importDefault(require("cors"));
+const helmet_1 = __importDefault(require("helmet"));
+const express_rate_limit_1 = __importDefault(require("express-rate-limit"));
+const database_1 = require("./config/database");
+const app_1 = require("./config/app");
+require("./resolvers/enums"); // Register enums
+const UserResolver_1 = require("./resolvers/UserResolver");
+const WalletResolver_1 = require("./resolvers/WalletResolver");
+const TransactionResolver_1 = require("./resolvers/TransactionResolver");
+const errorHandler_1 = require("./middleware/errorHandler");
+const logger_1 = require("./middleware/logger");
+const jwt_1 = require("./utils/jwt");
 // ... rest of your code stays the same
 async function startServer() {
     // Initialize database connection
     try {
-        await AppDataSource.initialize();
+        await database_1.AppDataSource.initialize();
         console.log('Database connected successfully');
     }
     catch (error) {
@@ -26,8 +31,8 @@ async function startServer() {
         process.exit(1);
     }
     // Build GraphQL schema
-    const schema = await buildSchema({
-        resolvers: [UserResolver, WalletResolver, TransactionResolver],
+    const schema = await (0, type_graphql_1.buildSchema)({
+        resolvers: [UserResolver_1.UserResolver, WalletResolver_1.WalletResolver, TransactionResolver_1.TransactionResolver],
         validate: false,
         authChecker: ({ context }) => {
             // Check if user is authenticated
@@ -35,17 +40,17 @@ async function startServer() {
         },
     });
     // Create Express app
-    const app = express();
+    const app = (0, express_1.default)();
     // Security middleware
-    app.use(helmet());
-    app.use(cors({
-        origin: appConfig.corsOrigin,
+    app.use((0, helmet_1.default)());
+    app.use((0, cors_1.default)({
+        origin: app_1.appConfig.corsOrigin,
         credentials: true,
     }));
     // Rate limiting - more lenient in development
-    const limiter = rateLimit({
+    const limiter = (0, express_rate_limit_1.default)({
         windowMs: 15 * 60 * 1000, // 15 minutes
-        max: appConfig.nodeEnv === 'development' ? 500 : 100, // Higher limit in development
+        max: app_1.appConfig.nodeEnv === 'development' ? 500 : 100, // Higher limit in development
         message: 'Too many requests from this IP, please try again later.',
         standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
         legacyHeaders: false, // Disable the `X-RateLimit-*` headers
@@ -56,12 +61,12 @@ async function startServer() {
     });
     app.use('/graphql', limiter);
     // Request logging
-    app.use(loggerMiddleware);
+    app.use(logger_1.loggerMiddleware);
     // Body parser
-    app.use(express.json());
-    app.use(express.urlencoded({ extended: true }));
+    app.use(express_1.default.json());
+    app.use(express_1.default.urlencoded({ extended: true }));
     // Create Apollo Server
-    const apolloServer = new ApolloServer({
+    const apolloServer = new apollo_server_express_1.ApolloServer({
         schema,
         context: ({ req }) => {
             // Extract user from JWT token if present
@@ -70,7 +75,7 @@ async function startServer() {
             if (authHeader && authHeader.startsWith('Bearer ')) {
                 try {
                     const token = authHeader.substring(7);
-                    user = verifyToken(token);
+                    user = (0, jwt_1.verifyToken)(token);
                 }
                 catch (error) {
                     // Token invalid or expired, user remains null
@@ -79,7 +84,7 @@ async function startServer() {
             }
             return { user, req };
         },
-        introspection: appConfig.nodeEnv === 'development',
+        introspection: app_1.appConfig.nodeEnv === 'development',
     });
     await apolloServer.start();
     apolloServer.applyMiddleware({ app: app, path: '/graphql' });
@@ -88,13 +93,13 @@ async function startServer() {
         res.json({ status: 'ok', timestamp: new Date().toISOString() });
     });
     // Error handling middleware (must be last)
-    app.use(errorHandler);
+    app.use(errorHandler_1.errorHandler);
     // Start server
-    const PORT = appConfig.port;
+    const PORT = app_1.appConfig.port;
     app.listen(PORT, () => {
         console.log(`Server running on http://localhost:${PORT}`);
         console.log(`GraphQL endpoint: http://localhost:${PORT}/graphql`);
-        if (appConfig.nodeEnv === 'development') {
+        if (app_1.appConfig.nodeEnv === 'development') {
             console.log(`GraphQL Playground: http://localhost:${PORT}/graphql`);
         }
     });

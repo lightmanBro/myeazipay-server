@@ -5,15 +5,15 @@ import { buildSchema } from 'type-graphql';
 import cors from 'cors';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
-import { AppDataSource } from './config/database.js';
-import { appConfig } from './config/app.js';
-import './resolvers/enums.js'; // Register enums
-import { UserResolver } from './resolvers/UserResolver.js';
-import { WalletResolver } from './resolvers/WalletResolver.js';
-import { TransactionResolver } from './resolvers/TransactionResolver.js';
-import { errorHandler } from './middleware/errorHandler.js';
-import { loggerMiddleware } from './middleware/logger.js';
-import { verifyToken } from './utils/jwt.js';
+import { AppDataSource } from './config/database';
+import { appConfig } from './config/app';
+import './resolvers/enums'; // Register enums
+import { UserResolver } from './resolvers/UserResolver';
+import { WalletResolver } from './resolvers/WalletResolver';
+import { TransactionResolver } from './resolvers/TransactionResolver';
+import { errorHandler } from './middleware/errorHandler';
+import { loggerMiddleware } from './middleware/logger';
+import { verifyToken } from './utils/jwt';
 
 // ... rest of your code stays the same
 async function startServer() {

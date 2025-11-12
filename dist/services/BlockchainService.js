@@ -1,16 +1,22 @@
-import { ethers } from 'ethers';
-import { getAlchemyRpcUrl, getEtherscanApiUrl, blockchainConfig } from '../config/blockchain';
-import { Network } from '../entities/Wallet';
-import axios from 'axios';
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.BlockchainService = void 0;
+const ethers_1 = require("ethers");
+const blockchain_1 = require("../config/blockchain");
+const Wallet_1 = require("../entities/Wallet");
+const axios_1 = __importDefault(require("axios"));
 /**
  * Service for interacting with blockchain APIs (Alchemy/Etherscan)
  */
-export class BlockchainService {
-    constructor(network = Network.TESTNET) {
-        const networkString = network === Network.TESTNET ? 'testnet' : 'mainnet';
-        const rpcUrl = getAlchemyRpcUrl(networkString);
-        this.alchemyProvider = new ethers.JsonRpcProvider(rpcUrl);
-        this.etherscanApiUrl = getEtherscanApiUrl(networkString);
+class BlockchainService {
+    constructor(network = Wallet_1.Network.TESTNET) {
+        const networkString = network === Wallet_1.Network.TESTNET ? 'testnet' : 'mainnet';
+        const rpcUrl = (0, blockchain_1.getAlchemyRpcUrl)(networkString);
+        this.alchemyProvider = new ethers_1.ethers.JsonRpcProvider(rpcUrl);
+        this.etherscanApiUrl = (0, blockchain_1.getEtherscanApiUrl)(networkString);
     }
     /**
      * Gets the balance of an address from the blockchain
@@ -130,9 +136,9 @@ export class BlockchainService {
     async getTransactionHistory(address, limit = 10) {
         try {
             // Try Etherscan first if API key is available
-            if (blockchainConfig.etherscanApiKey) {
+            if (blockchain_1.blockchainConfig.etherscanApiKey) {
                 try {
-                    const response = await axios.get(this.etherscanApiUrl, {
+                    const response = await axios_1.default.get(this.etherscanApiUrl, {
                         params: {
                             module: 'account',
                             action: 'txlist',
@@ -142,7 +148,7 @@ export class BlockchainService {
                             page: 1,
                             offset: limit,
                             sort: 'desc',
-                            apikey: blockchainConfig.etherscanApiKey,
+                            apikey: blockchain_1.blockchainConfig.etherscanApiKey,
                         },
                     });
                     // Handle Etherscan API response
@@ -256,4 +262,5 @@ export class BlockchainService {
         }
     }
 }
+exports.BlockchainService = BlockchainService;
 //# sourceMappingURL=BlockchainService.js.map
